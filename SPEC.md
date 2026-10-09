@@ -35,8 +35,8 @@ lazygit-style TUI for Tuckr dotfile repos. See per-file link state, diff drift, 
   - add: path in `~` not in repo → pick group (existing | new, optional `_<os>`) → move into `Configs/<group>/<rel>`, link.
 - backup: `~/.local/state/lazytuck/backup/<YYYYMMDD-HHMMSS>/<rel>` (respects `$XDG_STATE_HOME`).
 - panes: 1 Groups (active/inactive, counts per state) · 2 Files (state glyph + path) · 3 Detail (target, state, diff `repo ↔ home` for `drift`) · 4 Git (branch, ahead/behind, changed files).
-- keys: `tab`/`1-4` focus · `j/k` move · `space` link|unlink · `a` adopt · `r` restore · `d` diff · `n` add file · `c` commit · `p` push · `P` pull · `R` rescan · `?` help · `q` quit. Destructive op (`r`, `a` on group) → confirm prompt.
-- secret scan: on commit & push, ∀ staged/outgoing diff lines. Patterns: `AKIA[0-9A-Z]{16}`, `ghp_`, `gho_`, `glpat-`, `squ_`, `sk-`, `xox[abp]-`, `-----BEGIN .*PRIVATE KEY-----`, `(_password|_authToken|password|passwd|secret|token)\s*[=:]\s*\S+`. Hit → list `file:line`, block; override ! typed `yes`.
+- keys: `tab`/`1-4` focus · `j/k` move · `space` link|unlink · `a` adopt · `r` restore · `d` diff · `n` add file · `c` commit · `p` push · `P` pull · `R` rescan · `?` help · `q` quit. Confirm prompt: `r` on file, ∀ group op (≥1 file), `p`. Commit: message `enter` = confirm.
+- secret scan: added lines only. Commit → diff `git add -A` would record, built in temp `GIT_INDEX_FILE` (real index ⊥ touched). Push → patch of ∀ outgoing commit (`git log -p @{u}..HEAD`), ∴ secret added then removed still caught. Patterns: `AKIA[0-9A-Z]{16}`, `gh[po]_[A-Za-z0-9]{16,}`, `glpat-[A-Za-z0-9_-]{16,}`, `squ_[0-9a-f]{20,}`, `sk-[A-Za-z0-9_-]{20,}`, `xox[abp]-[A-Za-z0-9-]{10,}`, `-----BEGIN [A-Z ]*PRIVATE KEY-----`, `(?i)(_password|_authtoken|password|passwd|secret|token)["']?\s*[=:]\s*(\S+)` (value ⊥ empty, ⊥ `$VAR`/`<…>`). Min length after prefix: avoids `task-`-style false hits. Hit → list `file:line` + masked excerpt, block; override ! typed `yes`.
 
 ## §V Invariants
 
@@ -67,8 +67,8 @@ T7|x|TUI ops wiring: space/a/r + confirm prompts + status bar errors|I.ops,I.key
 T8|x|diff view `repo ↔ home` for `drift` in Detail pane|I.panes
 T9|x|add-file flow: path picker under `~`, group picker/new group w/ `_<os>`, move + link|I.ops,V1,V4
 T10|x|`gitx`: status, ahead/behind, commit w/ message, pull, push; Git pane|I.panes,V9
-T11|~|`secrets`: scan staged/outgoing diff, block + override; tests w/ fixtures ∀ pattern|I.secret scan,V10
-T12|.|GoReleaser (4 targets) + `Formula/lazytuck.rb` in `t1mdotcom/homebrew-tap`, release script|§C
+T11|x|`secrets`: scan staged/outgoing diff, block + override; tests w/ fixtures ∀ pattern|I.secret scan,V10
+T12|~|GoReleaser (4 targets) + `Formula/lazytuck.rb` in `t1mdotcom/homebrew-tap`, release script|§C
 T13|.|README (install, keys, Tuckr compat, `--only-files` rationale) + portfolio entry|§G
 
 ## §B Bugs

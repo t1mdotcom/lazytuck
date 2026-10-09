@@ -77,6 +77,7 @@ type Model struct {
 	add    *addFlow
 	commit *commitFlow
 	busy   string // running background git op ("push", "pull"), "" when idle
+	gate   *gate
 }
 
 // New builds the model for an opened workspace. Backups of this session share one
@@ -207,6 +208,9 @@ func (m Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	}
 	if m.add != nil {
 		return m.handleAddKey(k)
+	}
+	if m.gate != nil {
+		return m.handleGateKey(k)
 	}
 	if m.commit != nil {
 		return m.handleCommitKey(k)

@@ -105,6 +105,8 @@ func (m Model) render() string {
 		switch {
 		case m.add != nil:
 			right = box("Add file", m.addLines(), l.rightW, l.contentH, true)
+		case m.gate != nil:
+			right = box("Secret scan", m.gateLines(), l.rightW, l.contentH, true)
 		case m.commit != nil:
 			right = box("Commit", m.commitLines(), l.rightW, l.contentH, true)
 		}

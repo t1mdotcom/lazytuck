@@ -63,8 +63,8 @@ func (m Model) handleCommitKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		m.commit = nil
-		m.doCommit(msg)
-		return m, nil
+		cmd := m.guardCommit(msg)
+		return m, cmd
 	}
 	var cmd tea.Cmd
 	m.commit.msg, cmd = m.commit.msg.Update(k)
@@ -98,7 +98,7 @@ func (m *Model) startPush() {
 	m.confirm = &confirmation{
 		prompt: fmt.Sprintf("push %d commit(s) to %s?", n, up),
 		run: func(m *Model) tea.Cmd {
-			return m.runGit("push", func(dir string) error { _, err := gitx.Push(dir); return err })
+			return m.guardPush()
 		},
 	}
 }
