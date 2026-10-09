@@ -162,7 +162,7 @@ func TestGroupTargets(t *testing.T) {
 	}
 	plats := map[string]Platform{"darwin": darwin, "linux": linux, "wsl": wsl}
 	for _, c := range cases {
-		base, target := splitTarget(c.name)
+		base, target := SplitTarget(c.name)
 		if base != c.base || target != c.target {
 			t.Errorf("%s: split = (%q,%q), want (%q,%q)", c.name, base, target, c.base, c.target)
 		}

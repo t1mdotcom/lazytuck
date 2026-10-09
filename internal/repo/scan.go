@@ -55,7 +55,7 @@ func Scan(root string, p Platform) (*Repo, error) {
 		if !e.IsDir() {
 			continue
 		}
-		base, target := splitTarget(e.Name())
+		base, target := SplitTarget(e.Name())
 		g := Group{
 			Name:     e.Name(),
 			Base:     base,

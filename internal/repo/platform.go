@@ -36,9 +36,9 @@ var unixGOOS = map[string]bool{
 	"freebsd": true, "dragonfly": true, "openbsd": true, "netbsd": true,
 }
 
-// splitTarget returns the base name and the target suffix of a group directory name.
+// SplitTarget returns the base name and the target suffix of a group directory name.
 // A suffix that is not a Tuckr target makes the whole name a plain group.
-func splitTarget(name string) (base, target string) {
+func SplitTarget(name string) (base, target string) {
 	i := strings.LastIndexByte(name, '_')
 	if i <= 0 || i == len(name)-1 {
 		return name, ""
