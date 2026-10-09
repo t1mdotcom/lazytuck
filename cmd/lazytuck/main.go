@@ -38,7 +38,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stdout, version)
 		return 0
 	}
-	_ = repoFlag
+	rest := fs.Args()
+	if len(rest) > 0 && rest[0] == "status" {
+		return runStatus(*repoFlag, rest[1:], stdout, stderr)
+	}
 	fmt.Fprint(stderr, usage)
 	return 2
 }

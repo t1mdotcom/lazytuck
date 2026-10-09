@@ -48,7 +48,7 @@ func newFixture(t *testing.T) fixture {
 		"a/.linked_abs", "a/.linked_rel", "a/.missing", "a/.same", "a/.drift",
 		"a/.foreign", "a/.dir", "a/.dangling", "a/.inrepo",
 		"a/Library/Application Support/x.json",
-		"fold/.config/fold/init.lua",
+		"fold/.config/fold/init.lua", "fold/.config/fold/extra.txt", "x/.config/fold/extra.txt",
 		"other_linux/.other",
 		"zsh/.zshrc", "zsh_macos/.zshrc",
 		"alpha/.tie", "beta/.tie",
@@ -100,6 +100,8 @@ func TestClassifyAllStates(t *testing.T) {
 		"zsh/.zshrc":                           Shadowed, "zsh_macos/.zshrc": Missing,
 		"alpha/.tie": Shadowed, "beta/.tie": Missing,
 		"prog/%P/c.txt": Unsupported,
+		// x wins the tie for extra.txt, but the target path lies in fold's repo dir.
+		"fold/.config/fold/extra.txt": Shadowed, "x/.config/fold/extra.txt": Foreign,
 	}
 	if len(got) != len(want) {
 		t.Errorf("got %d entries, want %d", len(got), len(want))
@@ -112,8 +114,14 @@ func TestClassifyAllStates(t *testing.T) {
 	if e := got["fold/.config/fold/init.lua"]; !e.Folded || !e.InRepo {
 		t.Errorf("folded entry: Folded=%v InRepo=%v, want both true", e.Folded, e.InRepo)
 	}
-	if e := got["a/.inrepo"]; !e.InRepo {
-		t.Error("symlink into another repo file must be flagged InRepo")
+	if e := got["a/.inrepo"]; e.InRepo {
+		t.Error("a symlink in $HOME pointing at another repo file lives outside the repo; replacing it is safe")
+	}
+	if e := got["x/.config/fold/extra.txt"]; !e.InRepo || e.Folded {
+		t.Errorf("file inside folded dir belonging to another group: InRepo=%v Folded=%v, want true/false", e.InRepo, e.Folded)
+	}
+	if e := got["a/.linked_abs"]; e.InRepo {
+		t.Error("plain symlink in $HOME must not be flagged InRepo")
 	}
 	if e := got["a/.drift"]; e.InRepo || e.Folded {
 		t.Error("plain home file must not be flagged InRepo/Folded")

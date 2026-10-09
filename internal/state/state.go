@@ -140,6 +140,14 @@ func classifyTarget(e *Entry, realRoot string) error {
 	if err != nil {
 		return fmt.Errorf("resolve %s: %w", e.Source, err)
 	}
+	// Where the target path itself lives once parent symlinks are resolved. If that is
+	// inside the repo, moving or replacing the target would hit a repo file (V13).
+	realParent, err := filepath.EvalSymlinks(filepath.Dir(e.Target))
+	if err != nil {
+		return fmt.Errorf("resolve %s: %w", filepath.Dir(e.Target), err)
+	}
+	location := filepath.Join(realParent, filepath.Base(e.Target))
+	e.InRepo = within(location, realRoot)
 
 	switch {
 	case fi.Mode()&fs.ModeSymlink != 0:
@@ -149,20 +157,14 @@ func classifyTarget(e *Entry, realRoot string) error {
 			e.State = Dangling
 			return nil
 		}
-		e.InRepo = within(realTarget, realRoot)
 		if realTarget == realSource {
 			e.State = Linked
 		} else {
 			e.State = Foreign
 		}
 	case fi.Mode().IsRegular():
-		realTarget, err := filepath.EvalSymlinks(e.Target)
-		if err != nil {
-			return fmt.Errorf("resolve %s: %w", e.Target, err)
-		}
-		e.InRepo = within(realTarget, realRoot)
 		switch {
-		case realTarget == realSource:
+		case location == realSource:
 			e.State, e.Folded = Linked, true
 		case e.InRepo:
 			e.State = Foreign

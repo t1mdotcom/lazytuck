@@ -52,15 +52,15 @@ lazygit-style TUI for Tuckr dotfile repos. See per-file link state, diff drift, 
 - V10: secret scan hit → commit/push blocked until override (§I.secret scan). Scan runs before `git commit`, not after.
 - V11: same input FS → same status output (deterministic order: group asc, path asc).
 - V12: tests use temp `$HOME` + temp repo. ⊥ real `$HOME` in tests.
-- V13: target real path ∈ repo (folded dir symlink) → state `linked`; ∀ op ⊥ move/replace/remove it. Reason: backup+replace would move repo file out of repo.
+- V13: target location (parent dirs resolved, final component not followed) ∈ repo (folded dir symlink) → `InRepo`; = source → state `linked` (folded), ≠ source → `foreign`. ∀ op ⊥ move/replace/remove `InRepo` target. Symlink in `~` pointing into repo ⊥ `InRepo` (replacing it is safe). Reason: backup+replace would move repo file out of repo.
 
 ## §T Tasks
 
 id|status|task|cites
 T1|x|Go module `github.com/t1mdotcom/lazytuck`, `cmd/lazytuck`, `internal/{repo,state,ops,gitx,secrets,tui}`, Makefile, CI matrix ubuntu+macos (`go vet`, `go test -race`)|§C
-T2|.|`repo`: lookup order, target dir, enumerate groups/files, suffix → active/inactive, `%ENV` → unsupported, tests|I.repo lookup,I.target dir,I.layout,V6,V7,V12
-T3|.|`state`: per-file classify incl. precedence → `shadowed`, deterministic sort, tests ∀ state|I.state,I.precedence,V5,V6,V11,V12
-T4|.|`lazytuck status [--json]` + exit codes, smoke vs `~/.dotfiles`|I.cmd,V5,V11
+T2|x|`repo`: lookup order, target dir, enumerate groups/files, suffix → active/inactive, `%ENV` → unsupported, tests|I.repo lookup,I.target dir,I.layout,V6,V7,V12
+T3|x|`state`: per-file classify incl. precedence → `shadowed`, deterministic sort, tests ∀ state|I.state,I.precedence,V5,V6,V11,V12
+T4|x|`lazytuck status [--json]` + exit codes, smoke vs `~/.dotfiles`|I.cmd,V5,V11
 T5|.|`ops`: link/unlink/adopt/restore w/ backup + atomic rename, tests ∀ op × state|I.ops,I.backup,V1,V2,V3,V4,V7,V8,V12
 T6|.|TUI shell: 4 panes, focus, nav, help overlay, rescan|I.panes,I.keys,V5
 T7|.|TUI ops wiring: space/a/r + confirm prompts + status bar errors|I.ops,I.keys,V1,V8
@@ -74,3 +74,4 @@ T13|.|README (install, keys, Tuckr compat, `--only-files` rationale) + portfolio
 ## §B Bugs
 
 id|date|cause|fix
+B1|2026-10-09|`InRepo` from symlink destination → ∀ linked file flagged; V13 "real path" ambiguous|V13
