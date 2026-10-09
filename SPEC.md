@@ -79,7 +79,7 @@ T12|x|`.goreleaser.yaml` (4 targets, tar.gz, checksums, `homebrew_casks` → `Ca
 T13|x|README (install, keys, Tuckr compat, `--only-files` rationale) + portfolio entry|§G
 T14|x|`ops`: unmanage/delete per file, repo backup, empty-dir + hook cleanup, tests ∀ op × state|I.ops,I.backup,V13,V15,V16,V12
 T15|x|TUI `x`/`X` on file + group (⊥ `(all)`), confirm, help, README|I.keys,I.ops,V9
-T16|~|release v0.2.0, verify `brew upgrade` macOS + Linux|V14
+T16|x|release v0.2.0, verify `brew upgrade` macOS + Linux|V14
 
 ## §B Bugs
 
