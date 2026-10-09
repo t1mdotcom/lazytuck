@@ -20,10 +20,12 @@ import (
 type Kind string
 
 const (
-	Link    Kind = "link"
-	Unlink  Kind = "unlink"
-	Adopt   Kind = "adopt"
-	Restore Kind = "restore"
+	Link     Kind = "link"
+	Unlink   Kind = "unlink"
+	Adopt    Kind = "adopt"
+	Restore  Kind = "restore"
+	Unmanage Kind = "unmanage" // remove from repo, keep a real copy in the target dir
+	Delete   Kind = "delete"   // remove from repo and our copy from the target dir
 )
 
 var (
@@ -31,12 +33,20 @@ var (
 	ErrInRepo        = errors.New("target lies inside the repo (directory symlink); refusing to touch it")
 )
 
+// everyState: unmanage and delete accept any state; InRepo is still refused by Check.
+var everyState = []state.State{
+	state.Linked, state.Missing, state.Same, state.Drift, state.Foreign, state.Dangling,
+	state.Inactive, state.Shadowed, state.Unsupported,
+}
+
 // allowed lists the states each op accepts (§I.ops).
 var allowed = map[Kind][]state.State{
-	Link:    {state.Missing, state.Same},
-	Unlink:  {state.Linked},
-	Adopt:   {state.Drift, state.Same},
-	Restore: {state.Drift, state.Foreign, state.Dangling},
+	Link:     {state.Missing, state.Same},
+	Unlink:   {state.Linked},
+	Adopt:    {state.Drift, state.Same},
+	Restore:  {state.Drift, state.Foreign, state.Dangling},
+	Unmanage: everyState,
+	Delete:   everyState,
 }
 
 // Ops performs operations for one repo/target pair. Backups of one Ops value share
@@ -94,6 +104,10 @@ func (o *Ops) Run(k Kind, e state.Entry) error {
 		return o.adopt(e)
 	case Restore:
 		return o.restore(e)
+	case Unmanage:
+		return o.unmanage(e)
+	case Delete:
+		return o.delete(e)
 	}
 	return fmt.Errorf("unknown op %q", k)
 }

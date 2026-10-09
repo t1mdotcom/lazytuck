@@ -33,9 +33,13 @@ lazygit-style TUI for Tuckr dotfile repos. See per-file link state, diff drift, 
   - adopt: `drift` → copy home bytes → repo, backup, link.
   - restore: `drift`|`foreign`|`dangling` → backup, link (repo wins).
   - add: path in `~` not in repo → pick group (existing | new, optional `_<os>`) → move into `Configs/<group>/<rel>`, link.
-- backup: `~/.local/state/lazytuck/backup/<YYYYMMDD-HHMMSS>/<rel>` (respects `$XDG_STATE_HOME`).
+  - unmanage (`x`): ∀ state except `InRepo` → remove file from repo. `linked` → home symlink replaced by real copy first (atomic). Other states: home ⊥ touched.
+  - delete (`X`): ∀ state except `InRepo` → remove file from repo and our copy from home: `linked` → remove symlink; `same` → backup, remove. `drift`/`foreign`/`dangling`/`missing`/`inactive`/`shadowed`/`unsupported` → home ⊥ touched.
+  - repo removal: backup repo file first, then remove empty parent dirs up to `Configs/` (exclusive). Group dir gone → `Hooks/<group>` moved to backup.
+  - group ops on `(all)` pseudo-group: ⊥ unmanage, ⊥ delete.
+- backup: `~/.local/state/lazytuck/backup/<YYYYMMDD-HHMMSS>/<rel>` (respects `$XDG_STATE_HOME`); repo files under `…/<YYYYMMDD-HHMMSS>/repo/Configs/<group>/<rel>`, hooks under `…/repo/Hooks/<group>`.
 - panes: 1 Groups (active/inactive, counts per state) · 2 Files (state glyph + path) · 3 Detail (target, state, diff `repo ↔ home` for `drift`) · 4 Git (branch, ahead/behind, changed files).
-- keys: `tab`/`1-4` focus · `j/k` move · `space` link|unlink · `a` adopt · `r` restore · `d` diff · `n` add file · `c` commit · `p` push · `P` pull · `R` rescan · `?` help · `q` quit. Confirm prompt: `r` on file, ∀ group op (≥1 file), `p`. Commit: message `enter` = confirm.
+- keys: `tab`/`1-4` focus · `j/k` move · `space` link|unlink · `a` adopt · `r` restore · `x` unmanage · `X` delete · `d` diff · `n` add file · `c` commit · `p` push · `P` pull · `R` rescan · `?` help · `q` quit. Confirm prompt: `r`/`x`/`X` on file, ∀ group op (≥1 file), `p`. Commit: message `enter` = confirm.
 - secret scan: added lines only. Commit → diff `git add -A` would record, built in temp `GIT_INDEX_FILE` (real index ⊥ touched). Push → patch of ∀ outgoing commit (`git log -p @{u}..HEAD`), ∴ secret added then removed still caught. Patterns: `AKIA[0-9A-Z]{16}`, `gh[po]_[A-Za-z0-9]{16,}`, `glpat-[A-Za-z0-9_-]{16,}`, `squ_[0-9a-f]{20,}`, `sk-[A-Za-z0-9_-]{20,}`, `xox[abp]-[A-Za-z0-9-]{10,}`, `-----BEGIN [A-Z ]*PRIVATE KEY-----`, `(?i)(_password|_authtoken|password|passwd|secret|token)["']?\s*[=:]\s*(\S+)` (value ⊥ empty, ⊥ `$VAR`/`<…>`). Min length after prefix: avoids `task-`-style false hits. Hit → list `file:line` + masked excerpt, block; override ! typed `yes`.
 
 ## §V Invariants
@@ -54,6 +58,8 @@ lazygit-style TUI for Tuckr dotfile repos. See per-file link state, diff drift, 
 - V12: tests use temp `$HOME` + temp repo. ⊥ real `$HOME` in tests.
 - V13: target location (parent dirs resolved, final component not followed) ∈ repo (folded dir symlink) → `InRepo`; = source → state `linked` (folded), ≠ source → `foreign`. ∀ op ⊥ move/replace/remove `InRepo` target. Symlink in `~` pointing into repo ⊥ `InRepo` (replacing it is safe). Reason: backup+replace would move repo file out of repo.
 - V14: release only from clean `main` = `origin/main`, after `make check` passes. Tag `v<semver>` = archive version = cask version.
+- V15: ∀ repo file removal → backup copy first; backup fail → op aborted, repo + home untouched. Removal ⊥ commits (V9).
+- V16: unmanage of `linked` → home real copy in place before repo file removed (⊥ dangling window). Delete touches home only for `linked` (non-folded) and `same`.
 
 ## §T Tasks
 
@@ -71,6 +77,9 @@ T10|x|`gitx`: status, ahead/behind, commit w/ message, pull, push; Git pane|I.pa
 T11|x|`secrets`: scan staged/outgoing diff, block + override; tests w/ fixtures ∀ pattern|I.secret scan,V10
 T12|x|`.goreleaser.yaml` (4 targets, tar.gz, checksums, `homebrew_casks` → `Casks/lazytuck.rb`), `scripts/release.sh`, snapshot build verified|§C,V14
 T13|x|README (install, keys, Tuckr compat, `--only-files` rationale) + portfolio entry|§G
+T14|x|`ops`: unmanage/delete per file, repo backup, empty-dir + hook cleanup, tests ∀ op × state|I.ops,I.backup,V13,V15,V16,V12
+T15|~|TUI `x`/`X` on file + group (⊥ `(all)`), confirm, help, README|I.keys,I.ops,V9
+T16|.|release v0.2.0, verify `brew upgrade` macOS + Linux|V14
 
 ## §B Bugs
 
