@@ -15,7 +15,7 @@ lazygit-style TUI for Tuckr dotfile repos. See per-file link state, diff drift, 
 - Deps: Charm libs + stdlib. New dep ! entry here.
 - UI text English (public tool). Code, comments, commit subjects English.
 - Dev box: macOS, user's real repo `~/.dotfiles` (13 groups, 33 files). Tests ⊥ touch real `$HOME`.
-- Distribution: GitHub Releases via GoReleaser + Homebrew formula in `t1mdotcom/homebrew-tap` (`Formula/lazytuck.rb`).
+- Distribution: GitHub Releases via GoReleaser (local `scripts/release.sh`, token = `gh auth token`) + Homebrew cask `Casks/lazytuck.rb` in `t1mdotcom/homebrew-tap` (GoReleaser `homebrew_casks`; `brews`/formula deprecated since GoReleaser v2.16, casks run on Linuxbrew). Unsigned ∴ cask post-install hook strips `com.apple.quarantine` on macOS. Install: `brew install --cask t1mdotcom/tap/lazytuck`.
 
 ## §I Interfaces
 
@@ -53,6 +53,7 @@ lazygit-style TUI for Tuckr dotfile repos. See per-file link state, diff drift, 
 - V11: same input FS → same status output (deterministic order: group asc, path asc).
 - V12: tests use temp `$HOME` + temp repo. ⊥ real `$HOME` in tests.
 - V13: target location (parent dirs resolved, final component not followed) ∈ repo (folded dir symlink) → `InRepo`; = source → state `linked` (folded), ≠ source → `foreign`. ∀ op ⊥ move/replace/remove `InRepo` target. Symlink in `~` pointing into repo ⊥ `InRepo` (replacing it is safe). Reason: backup+replace would move repo file out of repo.
+- V14: release only from clean `main` = `origin/main`, after `make check` passes. Tag `v<semver>` = archive version = cask version.
 
 ## §T Tasks
 
@@ -68,8 +69,8 @@ T8|x|diff view `repo ↔ home` for `drift` in Detail pane|I.panes
 T9|x|add-file flow: path picker under `~`, group picker/new group w/ `_<os>`, move + link|I.ops,V1,V4
 T10|x|`gitx`: status, ahead/behind, commit w/ message, pull, push; Git pane|I.panes,V9
 T11|x|`secrets`: scan staged/outgoing diff, block + override; tests w/ fixtures ∀ pattern|I.secret scan,V10
-T12|~|GoReleaser (4 targets) + `Formula/lazytuck.rb` in `t1mdotcom/homebrew-tap`, release script|§C
-T13|.|README (install, keys, Tuckr compat, `--only-files` rationale) + portfolio entry|§G
+T12|x|`.goreleaser.yaml` (4 targets, tar.gz, checksums, `homebrew_casks` → `Casks/lazytuck.rb`), `scripts/release.sh`, snapshot build verified|§C,V14
+T13|~|README (install, keys, Tuckr compat, `--only-files` rationale) + portfolio entry|§G
 
 ## §B Bugs
 

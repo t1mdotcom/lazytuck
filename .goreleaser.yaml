@@ -1,0 +1,59 @@
+version: 2
+
+project_name: lazytuck
+
+builds:
+  - main: ./cmd/lazytuck
+    binary: lazytuck
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin, linux]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^chore:"
+
+release:
+  github:
+    owner: t1mdotcom
+    name: lazytuck
+
+homebrew_casks:
+  - name: lazytuck
+    binaries: [lazytuck]
+    repository:
+      owner: t1mdotcom
+      name: homebrew-tap
+      branch: main
+    directory: Casks
+    homepage: https://github.com/t1mdotcom/lazytuck
+    description: lazygit-style TUI for Tuckr dotfile repos
+    license: MIT
+    commit_author:
+      name: Tim Heinemann
+      email: tim.heinemann@clintworld.de
+    commit_msg_template: "lazytuck {{ .Tag }}"
+    hooks:
+      post:
+        # Unsigned binary: without this, Gatekeeper refuses to run it on macOS.
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/lazytuck"]
+          end

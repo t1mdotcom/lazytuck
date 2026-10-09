@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 
 	tea "charm.land/bubbletea/v2"
 
@@ -15,6 +16,17 @@ import (
 
 // version is set at build time via -ldflags "-X main.version=…".
 var version = "dev"
+
+// buildVersion returns the ldflags version, or the module version for `go install …@vX`.
+func buildVersion() string {
+	if version != "dev" {
+		return version
+	}
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+		return info.Main.Version
+	}
+	return version
+}
 
 const usage = `lazytuck — lazygit-style TUI for Tuckr dotfile repos
 
@@ -40,7 +52,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	if *showVersion {
-		fmt.Fprintln(stdout, version)
+		fmt.Fprintln(stdout, buildVersion())
 		return 0
 	}
 	rest := fs.Args()
