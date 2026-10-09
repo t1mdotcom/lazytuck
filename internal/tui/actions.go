@@ -16,7 +16,7 @@ type confirmation struct {
 	run    func(m *Model) tea.Cmd
 }
 
-// fileOp runs k on the selected file. Restore asks first (it replaces whatever is in $HOME).
+// fileOp runs k on the selected file. Restore, unmanage and delete ask first.
 func (m *Model) fileOp(k ops.Kind) {
 	e, ok := m.selected()
 	if !ok {
@@ -36,20 +36,56 @@ func (m *Model) fileOp(k ops.Kind) {
 			m.setNote(fmt.Errorf("%s %s: %w", k, e.Rel, err), "")
 			return nil
 		}
-		m.setNote(nil, "%s %s", pastTense(k), e.Rel)
+		m.setNote(nil, "%s %s%s", pastTense(k), e.Rel, commitHint(k))
 		return nil
 	}
-	if k == ops.Restore {
+	switch k {
+	case ops.Restore:
 		m.confirm = &confirmation{prompt: fmt.Sprintf("restore %s from repo (current file goes to backup)?", e.Rel), run: run}
-		return
+	case ops.Unmanage:
+		m.confirm = &confirmation{prompt: fmt.Sprintf("remove %s from the repo; %s?", e.Rel, unmanageEffect(e)), run: run}
+	case ops.Delete:
+		m.confirm = &confirmation{prompt: fmt.Sprintf("delete %s from the repo; %s?", e.Rel, deleteEffect(e)), run: run}
+	default:
+		run(m)
 	}
-	run(m)
+}
+
+// unmanageEffect / deleteEffect describe what happens in the target dir, for the prompt.
+func unmanageEffect(e state.Entry) string {
+	if e.State == state.Linked {
+		return "the link in ~ becomes a real copy"
+	}
+	return "~ stays as it is"
+}
+
+func deleteEffect(e state.Entry) string {
+	switch e.State {
+	case state.Linked:
+		return "the link in ~ is removed too"
+	case state.Same:
+		return "the identical copy in ~ goes to the backup"
+	}
+	return fmt.Sprintf("~ stays as it is (%s)", e.State)
+}
+
+// commitHint reminds that repo removals are not committed automatically (V9).
+func commitHint(k ops.Kind) string {
+	if k == ops.Unmanage || k == ops.Delete {
+		return " — press c to commit"
+	}
+	return ""
 }
 
 // groupOp runs k on every applicable file of the selected group, after confirmation.
 // For k == Link the direction is decided per group: all linked → unlink, else link.
 func (m *Model) groupOp(k ops.Kind) {
 	if len(m.groups) == 0 {
+		return
+	}
+	name := m.groups[m.gSel].name
+	if name == allGroups && (k == ops.Unmanage || k == ops.Delete) {
+		m.setNote(fmt.Errorf("select a single group to remove it from the repo"), "")
 		return
 	}
 	entries := m.files()
@@ -62,13 +98,19 @@ func (m *Model) groupOp(k ops.Kind) {
 			todo = append(todo, e)
 		}
 	}
-	name := m.groups[m.gSel].name
 	if len(todo) == 0 {
 		m.setNote(nil, "nothing to %s in %s", k, name)
 		return
 	}
+	prompt := fmt.Sprintf("%s %d file(s) in %s?", k, len(todo), name)
+	switch k {
+	case ops.Unmanage:
+		prompt = fmt.Sprintf("remove group %s (%d file(s)) from the repo; linked files become real copies in ~?", name, len(todo))
+	case ops.Delete:
+		prompt = fmt.Sprintf("delete group %s (%d file(s)) from the repo and its links/identical copies from ~?", name, len(todo))
+	}
 	m.confirm = &confirmation{
-		prompt: fmt.Sprintf("%s %d file(s) in %s?", k, len(todo), name),
+		prompt: prompt,
 		run: func(m *Model) tea.Cmd {
 			done, firstErr := 0, error(nil)
 			for _, e := range todo {
@@ -85,7 +127,7 @@ func (m *Model) groupOp(k ops.Kind) {
 				m.setNote(fmt.Errorf("%d/%d done; %w", done, len(todo), firstErr), "")
 				return nil
 			}
-			m.setNote(nil, "%s %d file(s) in %s", pastTense(k), done, name)
+			m.setNote(nil, "%s %d file(s) in %s%s", pastTense(k), done, name, commitHint(k))
 			return nil
 		},
 	}
@@ -126,6 +168,10 @@ func pastTense(k ops.Kind) string {
 		return "adopted"
 	case ops.Restore:
 		return "restored"
+	case ops.Unmanage:
+		return "unmanaged"
+	case ops.Delete:
+		return "deleted"
 	}
 	return string(k) + "ed"
 }
@@ -144,6 +190,9 @@ func fileKeys(e state.Entry) string {
 	}
 	if ops.Check(ops.Restore, e) == nil {
 		keys = append(keys, "r restore (repo → home)")
+	}
+	if ops.Check(ops.Unmanage, e) == nil {
+		keys = append(keys, "x unmanage · X delete")
 	}
 	return strings.Join(keys, " · ")
 }

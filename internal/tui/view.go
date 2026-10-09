@@ -365,6 +365,8 @@ func helpLines() []string {
 		{"space", "link / unlink file; on a group: link all or unlink all"},
 		{"a", "adopt: copy home version into repo, then link"},
 		{"r", "restore: back up home version, link repo version"},
+		{"x", "unmanage: remove from repo, a linked file stays as a real copy"},
+		{"X", "delete: remove from repo and our link/copy in ~ (backed up)"},
 		{"d", "jump to the diff of a drifted file"},
 		{"n", "add a file or directory from ~ to the repo"},
 		{"c", "commit all changes in the repo"},
@@ -404,7 +406,7 @@ func (m Model) statusBar() string {
 			}
 		}
 	case paneGroups:
-		hints = "enter files · space link/unlink all · a adopt all · r restore all · ? help"
+		hints = "enter files · space link/unlink all · a adopt · r restore · x/X remove group · ? help"
 	case paneGit:
 		hints = "c commit · p push · P pull · R rescan · ? help"
 	}

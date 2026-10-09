@@ -280,8 +280,8 @@ func (m Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		m.setNote(nil, "diff is available for drifted files")
-	case " ", "space", "a", "r":
-		k := map[string]ops.Kind{" ": ops.Link, "space": ops.Link, "a": ops.Adopt, "r": ops.Restore}[key]
+	case " ", "space", "a", "r", "x", "X":
+		k := map[string]ops.Kind{" ": ops.Link, "space": ops.Link, "a": ops.Adopt, "r": ops.Restore, "x": ops.Unmanage, "X": ops.Delete}[key]
 		switch m.focus {
 		case paneFiles:
 			m.fileOp(k)

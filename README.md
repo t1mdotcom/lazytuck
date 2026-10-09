@@ -86,6 +86,8 @@ Files are linked into `$TUCKR_TARGET`, or `$HOME`.
 | `space` | link / unlink a file; on a group: link all or unlink all |
 | `a` | adopt: copy the home version into the repo, then link |
 | `r` | restore: back up the home version, link the repo version |
+| `x` | unmanage: remove from the repo; a linked file stays in `~` as a real copy |
+| `X` | delete: remove from the repo and our link or identical copy from `~` |
 | `d` | jump to the diff of a drifted file |
 | `n` | add a file or directory from `~` to a group (new groups may use `_macos` etc.) |
 | `c` | commit all changes |
@@ -93,10 +95,20 @@ Files are linked into `$TUCKR_TARGET`, or `$HOME`.
 | `R` | rescan |
 | `?` | help |
 
+### Removing old configs
+
+`x` and `X` work on a file or, in the Groups pane, on a whole group (not on `(all)`). Both ask first.
+`x` keeps whatever you use today: a linked file is replaced by a real copy before the repo file
+goes, so it never dangles. `X` also cleans up `~`, but only what is ours — the link, or a copy
+identical to the repo version; a drifted or foreign file stays. Directories left empty in the
+repo disappear, and so does `Hooks/<group>` once its group is gone. Nothing is committed until
+you press `c`.
+
 ## Safety
 
-- **Backups first.** Whatever lazytuck replaces in `$HOME` is copied to
-  `~/.local/state/lazytuck/backup/<timestamp>/` (or `$XDG_STATE_HOME`) before anything changes.
+- **Backups first.** Whatever lazytuck replaces or removes is copied to
+  `~/.local/state/lazytuck/backup/<timestamp>/` (or `$XDG_STATE_HOME`) before anything changes —
+  files from `$HOME` under their path, repo files and hooks under `repo/`.
   If the backup fails, the operation does not run.
 - **No gap.** Links are created under a temporary name and renamed over the target, so a
   file is never missing — programs that watch their config (AeroSpace with
@@ -122,6 +134,9 @@ links, links into the wrong group, or symlinks written into the repo. With `--on
 100 of 100 runs were correct. lazytuck itself always links single files.
 
 Hooks (`Hooks/<group>/post.sh`) are listed per group but not run; use `tuckr set` for that.
+To take a group out of the repo, use `x` rather than `tuckr pop`: in a test on a real repo,
+Tuckr 0.13.1 panicked with "Directory not empty" after it had already removed the link, leaving
+no file in `$HOME`.
 Not supported yet: Tuckr profiles, `%ENV` path segments (shown as unsupported and left alone),
 encrypted `Secrets/`.
 
