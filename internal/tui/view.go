@@ -102,8 +102,11 @@ func (m Model) render() string {
 			box(paneTitles[paneGit], m.gitLines(), l.leftW, gitHeight, m.focus == paneGit),
 		)
 		right := box(paneTitles[paneDetail], strings.Split(m.detail.View(), "\n"), l.rightW, l.contentH, m.focus == paneDetail)
-		if m.add != nil {
+		switch {
+		case m.add != nil:
 			right = box("Add file", m.addLines(), l.rightW, l.contentH, true)
+		case m.commit != nil:
+			right = box("Commit", m.commitLines(), l.rightW, l.contentH, true)
 		}
 		body = lipgloss.JoinHorizontal(lipgloss.Top, left, right)
 	}
@@ -362,6 +365,8 @@ func helpLines() []string {
 		{"r", "restore: back up home version, link repo version"},
 		{"d", "jump to the diff of a drifted file"},
 		{"n", "add a file or directory from ~ to the repo"},
+		{"c", "commit all changes in the repo"},
+		{"p / P", "push (asks first) / pull --ff-only"},
 		{"R", "rescan repo and git status"},
 		{"?", "toggle this help"},
 		{"q ctrl+c", "quit"},
@@ -398,6 +403,8 @@ func (m Model) statusBar() string {
 		}
 	case paneGroups:
 		hints = "enter files · space link/unlink all · a adopt all · r restore all · ? help"
+	case paneGit:
+		hints = "c commit · p push · P pull · R rescan · ? help"
 	}
 	return fit(stDim.Render(" "+hints), m.width)
 }

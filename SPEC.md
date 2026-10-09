@@ -66,8 +66,8 @@ T6|x|TUI shell: 4 panes, focus, nav, help overlay, rescan|I.panes,I.keys,V5
 T7|x|TUI ops wiring: space/a/r + confirm prompts + status bar errors|I.ops,I.keys,V1,V8
 T8|x|diff view `repo ↔ home` for `drift` in Detail pane|I.panes
 T9|x|add-file flow: path picker under `~`, group picker/new group w/ `_<os>`, move + link|I.ops,V1,V4
-T10|~|`gitx`: status, ahead/behind, commit w/ message, pull, push; Git pane|I.panes,V9
-T11|.|`secrets`: scan staged/outgoing diff, block + override; tests w/ fixtures ∀ pattern|I.secret scan,V10
+T10|x|`gitx`: status, ahead/behind, commit w/ message, pull, push; Git pane|I.panes,V9
+T11|~|`secrets`: scan staged/outgoing diff, block + override; tests w/ fixtures ∀ pattern|I.secret scan,V10
 T12|.|GoReleaser (4 targets) + `Formula/lazytuck.rb` in `t1mdotcom/homebrew-tap`, release script|§C
 T13|.|README (install, keys, Tuckr compat, `--only-files` rationale) + portfolio entry|§G
 

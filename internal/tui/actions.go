@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"strings"
 
+	tea "charm.land/bubbletea/v2"
+
 	"github.com/t1mdotcom/lazytuck/internal/ops"
 	"github.com/t1mdotcom/lazytuck/internal/state"
 )
 
-// confirmation is a pending y/N question; run executes on "y".
+// confirmation is a pending y/N question; run executes on "y" and may start a command.
 type confirmation struct {
 	prompt string
-	run    func(m *Model)
+	run    func(m *Model) tea.Cmd
 }
 
 // fileOp runs k on the selected file. Restore asks first (it replaces whatever is in $HOME).
@@ -27,14 +29,15 @@ func (m *Model) fileOp(k ops.Kind) {
 		m.setNote(err, "")
 		return
 	}
-	run := func(m *Model) {
+	run := func(m *Model) tea.Cmd {
 		err := m.ops.Run(k, e)
 		m.afterOp()
 		if err != nil {
 			m.setNote(fmt.Errorf("%s %s: %w", k, e.Rel, err), "")
-			return
+			return nil
 		}
 		m.setNote(nil, "%s %s", pastTense(k), e.Rel)
+		return nil
 	}
 	if k == ops.Restore {
 		m.confirm = &confirmation{prompt: fmt.Sprintf("restore %s from repo (current file goes to backup)?", e.Rel), run: run}
@@ -66,7 +69,7 @@ func (m *Model) groupOp(k ops.Kind) {
 	}
 	m.confirm = &confirmation{
 		prompt: fmt.Sprintf("%s %d file(s) in %s?", k, len(todo), name),
-		run: func(m *Model) {
+		run: func(m *Model) tea.Cmd {
 			done, firstErr := 0, error(nil)
 			for _, e := range todo {
 				if err := m.ops.Run(k, e); err != nil {
@@ -80,9 +83,10 @@ func (m *Model) groupOp(k ops.Kind) {
 			m.afterOp()
 			if firstErr != nil {
 				m.setNote(fmt.Errorf("%d/%d done; %w", done, len(todo), firstErr), "")
-				return
+				return nil
 			}
 			m.setNote(nil, "%s %d file(s) in %s", pastTense(k), done, name)
+			return nil
 		},
 	}
 }

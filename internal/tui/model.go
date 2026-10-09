@@ -74,7 +74,9 @@ type Model struct {
 	// diffs caches `git diff` output per target until the next rescan.
 	diffs map[string]string
 
-	add *addFlow
+	add    *addFlow
+	commit *commitFlow
+	busy   string // running background git op ("push", "pull"), "" when idle
 }
 
 // New builds the model for an opened workspace. Backups of this session share one
@@ -186,6 +188,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case tea.KeyPressMsg:
 		return m.handleKey(msg)
+	case gitDoneMsg:
+		m.gitDone(msg)
+		m.syncDetail()
+		return m, nil
 	}
 	return m, nil
 }
@@ -202,16 +208,20 @@ func (m Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if m.add != nil {
 		return m.handleAddKey(k)
 	}
+	if m.commit != nil {
+		return m.handleCommitKey(k)
+	}
 	if m.confirm != nil {
 		c := m.confirm
 		m.confirm = nil
+		var cmd tea.Cmd
 		if key == "y" || key == "Y" {
-			c.run(&m)
+			cmd = c.run(&m)
 		} else {
 			m.setNote(nil, "cancelled")
 		}
 		m.syncDetail()
-		return m, nil
+		return m, cmd
 	}
 	m.note = ""
 
@@ -247,6 +257,14 @@ func (m Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		}
 	case "n":
 		cmd := m.startAdd()
+		return m, cmd
+	case "c":
+		cmd := m.startCommit()
+		return m, cmd
+	case "p":
+		m.startPush()
+	case "P":
+		cmd := m.startPull()
 		return m, cmd
 	case "d":
 		if e, ok := m.selected(); ok && e.State == state.Drift {
