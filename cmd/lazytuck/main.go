@@ -6,6 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	tea "charm.land/bubbletea/v2"
+
+	"github.com/t1mdotcom/lazytuck/internal/tui"
+	"github.com/t1mdotcom/lazytuck/internal/workspace"
 )
 
 // version is set at build time via -ldflags "-X main.version=…".
@@ -39,9 +44,25 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 	rest := fs.Args()
-	if len(rest) > 0 && rest[0] == "status" {
+	if len(rest) == 0 {
+		return runTUI(*repoFlag, stderr)
+	}
+	if rest[0] == "status" {
 		return runStatus(*repoFlag, rest[1:], stdout, stderr)
 	}
-	fmt.Fprint(stderr, usage)
+	fmt.Fprintf(stderr, "lazytuck: unknown command %q\n\n%s", rest[0], usage)
 	return 2
+}
+
+func runTUI(repoFlag string, stderr io.Writer) int {
+	ws, err := workspace.Open(repoFlag)
+	if err != nil {
+		fmt.Fprintln(stderr, "lazytuck:", err)
+		return 2
+	}
+	if _, err := tea.NewProgram(tui.New(ws)).Run(); err != nil {
+		fmt.Fprintln(stderr, "lazytuck:", err)
+		return 2
+	}
+	return 0
 }

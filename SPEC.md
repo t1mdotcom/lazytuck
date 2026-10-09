@@ -62,8 +62,8 @@ T2|x|`repo`: lookup order, target dir, enumerate groups/files, suffix → active
 T3|x|`state`: per-file classify incl. precedence → `shadowed`, deterministic sort, tests ∀ state|I.state,I.precedence,V5,V6,V11,V12
 T4|x|`lazytuck status [--json]` + exit codes, smoke vs `~/.dotfiles`|I.cmd,V5,V11
 T5|x|`ops`: link/unlink/adopt/restore w/ backup + atomic rename, tests ∀ op × state|I.ops,I.backup,V1,V2,V3,V4,V7,V8,V12
-T6|.|TUI shell: 4 panes, focus, nav, help overlay, rescan|I.panes,I.keys,V5
-T7|.|TUI ops wiring: space/a/r + confirm prompts + status bar errors|I.ops,I.keys,V1,V8
+T6|x|TUI shell: 4 panes, focus, nav, help overlay, rescan|I.panes,I.keys,V5
+T7|~|TUI ops wiring: space/a/r + confirm prompts + status bar errors|I.ops,I.keys,V1,V8
 T8|.|diff view `repo ↔ home` for `drift` in Detail pane|I.panes
 T9|.|add-file flow: path picker under `~`, group picker/new group w/ `_<os>`, move + link|I.ops,V1,V4
 T10|.|`gitx`: status, ahead/behind, commit w/ message, pull, push; Git pane|I.panes,V9
