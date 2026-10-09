@@ -73,6 +73,8 @@ type Model struct {
 
 	// diffs caches `git diff` output per target until the next rescan.
 	diffs map[string]string
+
+	add *addFlow
 }
 
 // New builds the model for an opened workspace. Backups of this session share one
@@ -197,6 +199,9 @@ func (m Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.showHelp = false
 		return m, nil
 	}
+	if m.add != nil {
+		return m.handleAddKey(k)
+	}
 	if m.confirm != nil {
 		c := m.confirm
 		m.confirm = nil
@@ -240,6 +245,9 @@ func (m Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		if m.focus == paneGroups {
 			m.focus = paneFiles
 		}
+	case "n":
+		cmd := m.startAdd()
+		return m, cmd
 	case "d":
 		if e, ok := m.selected(); ok && e.State == state.Drift {
 			m.focus = paneDetail

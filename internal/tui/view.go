@@ -102,6 +102,9 @@ func (m Model) render() string {
 			box(paneTitles[paneGit], m.gitLines(), l.leftW, gitHeight, m.focus == paneGit),
 		)
 		right := box(paneTitles[paneDetail], strings.Split(m.detail.View(), "\n"), l.rightW, l.contentH, m.focus == paneDetail)
+		if m.add != nil {
+			right = box("Add file", m.addLines(), l.rightW, l.contentH, true)
+		}
 		body = lipgloss.JoinHorizontal(lipgloss.Top, left, right)
 	}
 	return body + "\n" + m.statusBar()
@@ -358,6 +361,7 @@ func helpLines() []string {
 		{"a", "adopt: copy home version into repo, then link"},
 		{"r", "restore: back up home version, link repo version"},
 		{"d", "jump to the diff of a drifted file"},
+		{"n", "add a file or directory from ~ to the repo"},
 		{"R", "rescan repo and git status"},
 		{"?", "toggle this help"},
 		{"q ctrl+c", "quit"},
