@@ -77,7 +77,7 @@ func Check(k Kind, e state.Entry) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("%w: cannot %s a %s file", ErrNotApplicable, k, e.State)
+	return fmt.Errorf("%w: %s is %s; cannot %s it", ErrNotApplicable, e.Rel, e.State, k)
 }
 
 // Run performs op k on e.

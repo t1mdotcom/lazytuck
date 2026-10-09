@@ -3,11 +3,14 @@ package tui
 
 import (
 	"fmt"
+	"os"
+	"time"
 
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/t1mdotcom/lazytuck/internal/gitx"
+	"github.com/t1mdotcom/lazytuck/internal/ops"
 	"github.com/t1mdotcom/lazytuck/internal/state"
 	"github.com/t1mdotcom/lazytuck/internal/workspace"
 )
@@ -63,11 +66,20 @@ type Model struct {
 	note          string
 	noteErr       bool
 	showHelp      bool
+
+	ops     *ops.Ops
+	confirm *confirmation
 }
 
-// New builds the model for an opened workspace.
+// New builds the model for an opened workspace. Backups of this session share one
+// timestamped directory below $XDG_STATE_HOME (or ~/.local/state).
 func New(ws *workspace.Workspace) Model {
-	m := Model{ws: ws, detail: viewport.New()}
+	home, _ := os.UserHomeDir()
+	m := Model{
+		ws:     ws,
+		detail: viewport.New(),
+		ops:    ops.New(ws.Repo, ws.Loc.Target, ops.StateHome(home), time.Now()),
+	}
 	m.refreshGit()
 	m.rebuild()
 	return m
@@ -179,6 +191,17 @@ func (m Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.showHelp = false
 		return m, nil
 	}
+	if m.confirm != nil {
+		c := m.confirm
+		m.confirm = nil
+		if key == "y" || key == "Y" {
+			c.run(&m)
+		} else {
+			m.setNote(nil, "cancelled")
+		}
+		m.syncDetail()
+		return m, nil
+	}
 	m.note = ""
 
 	switch key {
@@ -210,6 +233,14 @@ func (m Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	case "enter":
 		if m.focus == paneGroups {
 			m.focus = paneFiles
+		}
+	case " ", "space", "a", "r":
+		k := map[string]ops.Kind{" ": ops.Link, "space": ops.Link, "a": ops.Adopt, "r": ops.Restore}[key]
+		switch m.focus {
+		case paneFiles:
+			m.fileOp(k)
+		case paneGroups:
+			m.groupOp(k)
 		}
 	}
 	m.syncDetail()

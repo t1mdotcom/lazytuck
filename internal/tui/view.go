@@ -301,6 +301,9 @@ func (m Model) fileDetail(e state.Entry) string {
 	if e.InRepo {
 		lines = append(lines, kv("Note", stWarn.Render("target lies inside the repo; lazytuck will not touch it")))
 	}
+	if keys := fileKeys(e); keys != "" {
+		lines = append(lines, "", kv("Keys", keys))
+	}
 	return strings.Join(lines, "\n")
 }
 
@@ -311,6 +314,9 @@ func helpLines() []string {
 		{"j k ↑ ↓", "move selection / scroll detail"},
 		{"pgup pgdown", "page"},
 		{"enter", "open group's files"},
+		{"space", "link / unlink file; on a group: link all or unlink all"},
+		{"a", "adopt: copy home version into repo, then link"},
+		{"r", "restore: back up home version, link repo version"},
 		{"R", "rescan repo and git status"},
 		{"?", "toggle this help"},
 		{"q ctrl+c", "quit"},
@@ -328,11 +334,25 @@ func helpLines() []string {
 }
 
 func (m Model) statusBar() string {
+	if m.confirm != nil {
+		return fit(stWarn.Render(" "+m.confirm.prompt+" [y/N]"), m.width)
+	}
 	if m.note != "" {
 		if m.noteErr {
 			return fit(stBad.Render(" ✗ "+m.note), m.width)
 		}
 		return fit(stOK.Render(" "+m.note), m.width)
 	}
-	return fit(stDim.Render(" j/k move · tab pane · R rescan · ? help · q quit"), m.width)
+	hints := "j/k move · tab pane · R rescan · ? help · q quit"
+	switch m.focus {
+	case paneFiles:
+		if e, ok := m.selected(); ok {
+			if k := fileKeys(e); k != "" {
+				hints = k + " · ? help"
+			}
+		}
+	case paneGroups:
+		hints = "enter files · space link/unlink all · a adopt all · r restore all · ? help"
+	}
+	return fit(stDim.Render(" "+hints), m.width)
 }
