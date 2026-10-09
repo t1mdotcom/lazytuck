@@ -70,7 +70,7 @@ T9|x|add-file flow: path picker under `~`, group picker/new group w/ `_<os>`, mo
 T10|x|`gitx`: status, ahead/behind, commit w/ message, pull, push; Git pane|I.panes,V9
 T11|x|`secrets`: scan staged/outgoing diff, block + override; tests w/ fixtures ∀ pattern|I.secret scan,V10
 T12|x|`.goreleaser.yaml` (4 targets, tar.gz, checksums, `homebrew_casks` → `Casks/lazytuck.rb`), `scripts/release.sh`, snapshot build verified|§C,V14
-T13|~|README (install, keys, Tuckr compat, `--only-files` rationale) + portfolio entry|§G
+T13|x|README (install, keys, Tuckr compat, `--only-files` rationale) + portfolio entry|§G
 
 ## §B Bugs
 
