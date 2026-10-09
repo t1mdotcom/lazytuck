@@ -64,8 +64,8 @@ T4|x|`lazytuck status [--json]` + exit codes, smoke vs `~/.dotfiles`|I.cmd,V5,V1
 T5|x|`ops`: link/unlink/adopt/restore w/ backup + atomic rename, tests ∀ op × state|I.ops,I.backup,V1,V2,V3,V4,V7,V8,V12
 T6|x|TUI shell: 4 panes, focus, nav, help overlay, rescan|I.panes,I.keys,V5
 T7|x|TUI ops wiring: space/a/r + confirm prompts + status bar errors|I.ops,I.keys,V1,V8
-T8|~|diff view `repo ↔ home` for `drift` in Detail pane|I.panes
-T9|.|add-file flow: path picker under `~`, group picker/new group w/ `_<os>`, move + link|I.ops,V1,V4
+T8|x|diff view `repo ↔ home` for `drift` in Detail pane|I.panes
+T9|~|add-file flow: path picker under `~`, group picker/new group w/ `_<os>`, move + link|I.ops,V1,V4
 T10|.|`gitx`: status, ahead/behind, commit w/ message, pull, push; Git pane|I.panes,V9
 T11|.|`secrets`: scan staged/outgoing diff, block + override; tests w/ fixtures ∀ pattern|I.secret scan,V10
 T12|.|GoReleaser (4 targets) + `Formula/lazytuck.rb` in `t1mdotcom/homebrew-tap`, release script|§C

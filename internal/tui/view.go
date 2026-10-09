@@ -9,6 +9,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 
+	"github.com/t1mdotcom/lazytuck/internal/gitx"
 	"github.com/t1mdotcom/lazytuck/internal/state"
 )
 
@@ -304,7 +305,46 @@ func (m Model) fileDetail(e state.Entry) string {
 	if keys := fileKeys(e); keys != "" {
 		lines = append(lines, "", kv("Keys", keys))
 	}
+	if e.State == state.Drift {
+		lines = append(lines, "", stBold.Render(diffHeader), m.diff(e))
+	}
 	return strings.Join(lines, "\n")
+}
+
+// diffHeader starts the diff section of the file detail; `d` scrolls to it.
+const diffHeader = "Diff  repo ↔ home"
+
+// diff renders the colored repo → home diff of a drifted file (cached per scan).
+func (m Model) diff(e state.Entry) string {
+	if d, ok := m.diffs[e.Target]; ok {
+		return d
+	}
+	raw, err := gitx.DiffFiles(e.Source, e.Target)
+	var out string
+	if err != nil {
+		out = stBad.Render(err.Error())
+	} else {
+		var lines []string
+		for _, l := range strings.Split(strings.TrimRight(raw, "\n"), "\n") {
+			switch {
+			case strings.HasPrefix(l, "diff "), strings.HasPrefix(l, "index "):
+				continue // the paths are already shown above
+			case strings.HasPrefix(l, "+++"), strings.HasPrefix(l, "---"):
+				lines = append(lines, stDim.Render(l))
+			case strings.HasPrefix(l, "@@"):
+				lines = append(lines, stAccent.Render(l))
+			case strings.HasPrefix(l, "+"):
+				lines = append(lines, stOK.Render(l))
+			case strings.HasPrefix(l, "-"):
+				lines = append(lines, stBad.Render(l))
+			default:
+				lines = append(lines, l)
+			}
+		}
+		out = strings.Join(lines, "\n")
+	}
+	m.diffs[e.Target] = out
+	return out
 }
 
 func helpLines() []string {
@@ -317,6 +357,7 @@ func helpLines() []string {
 		{"space", "link / unlink file; on a group: link all or unlink all"},
 		{"a", "adopt: copy home version into repo, then link"},
 		{"r", "restore: back up home version, link repo version"},
+		{"d", "jump to the diff of a drifted file"},
 		{"R", "rescan repo and git status"},
 		{"?", "toggle this help"},
 		{"q ctrl+c", "quit"},

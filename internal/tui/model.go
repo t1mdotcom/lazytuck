@@ -4,6 +4,7 @@ package tui
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"charm.land/bubbles/v2/viewport"
@@ -69,6 +70,9 @@ type Model struct {
 
 	ops     *ops.Ops
 	confirm *confirmation
+
+	// diffs caches `git diff` output per target until the next rescan.
+	diffs map[string]string
 }
 
 // New builds the model for an opened workspace. Backups of this session share one
@@ -79,6 +83,7 @@ func New(ws *workspace.Workspace) Model {
 		ws:     ws,
 		detail: viewport.New(),
 		ops:    ops.New(ws.Repo, ws.Loc.Target, ops.StateHome(home), time.Now()),
+		diffs:  map[string]string{},
 	}
 	m.refreshGit()
 	m.rebuild()
@@ -112,6 +117,7 @@ func (m *Model) rebuild() {
 		}
 	}
 	m.groups = append([]groupRow{all}, rows...)
+	clear(m.diffs)
 	m.gSel = clamp(m.gSel, len(m.groups))
 	m.fSel = clamp(m.fSel, len(m.files()))
 	m.syncDetail()
@@ -234,6 +240,16 @@ func (m Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		if m.focus == paneGroups {
 			m.focus = paneFiles
 		}
+	case "d":
+		if e, ok := m.selected(); ok && e.State == state.Drift {
+			m.focus = paneDetail
+			m.syncDetail()
+			if i := strings.Index(m.detail.GetContent(), diffHeader); i >= 0 {
+				m.detail.SetYOffset(strings.Count(m.detail.GetContent()[:i], "\n"))
+			}
+			return m, nil
+		}
+		m.setNote(nil, "diff is available for drifted files")
 	case " ", "space", "a", "r":
 		k := map[string]ops.Kind{" ": ops.Link, "space": ops.Link, "a": ops.Adopt, "r": ops.Restore}[key]
 		switch m.focus {
